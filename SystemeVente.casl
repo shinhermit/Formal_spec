@@ -1,69 +1,72 @@
 library SystemeVente
 
-from Basic/Numbers get NAT RAT
-from Basic/SimpleDatatypes get CHAR
-from Basic/StructuredDatatypes get STRING
-%[from Basic/StructuredDatatypes get STRING, SET, LIST]%
+from Basic/Numbers get Nat
+from Basic/Numbers get Rat
+from Basic/CharactersAndStrings get Char
+from Basic/CharactersAndStrings get String
+%[from Basic/StructuredDatatypes get SET, LIST]%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 spec Gestion_articles =
-generated type Article ::= creer_article(STRING; RAT; NAT; NAT; NAT)
+String and Rat and Nat
+then
+generated type Article ::= creer_article(String; Rat; Nat; Nat; Nat)
 preds
 __est_en_rupture_de_stock: Article
 
 ops
-approvisionner: Article * NAT -> Article
-promotionner: Article * NAT -> Article
+approvisionner: Article * Nat -> Article
+promotionner: Article * Nat -> Article
 
-reference: Article -> STRING;
-prix: Article -> RAT;
-stock: Article -> NAT
+reference: Article -> String;
+prix: Article -> Rat;
+stock: Article -> Nat
 
-liver: Article * NAT ->? Article;
-delai_livraison: Article -> NAT;
+livrer: Article * Nat ->? Article;
+delai_livraison: Article -> Nat;
 
-taux_promotion: Article -> NAT;
-prix_promotion: Article -> RAT;
+taux_promotion: Article -> Nat;
+prix_promotion: Article -> Rat;
 
-forall art:Article; quant, quant2, taux, taux2, delai, stock: NAT; prix: RAT; ref: STRING
+forall art:Article; quant, quant2, tx, tx2, delai, stck: Nat; prx: Rat; ref: String
 %%ensembles de définition
 . def livrer(art, quant) <=> quant <= stock(art)
 
 %%axiomes
 . art est_en_rupture_de_stock <=> stock(art) = 0
 
-. approvisionner( creer_article(ref, prix, delai, taux, stock), quant ) => stock(art) = stock + quant
-. promotionner( creer_article(ref, prix, delai, taux, stock), taux2 ) => taux_promotion(art) = taux2
-. reference( creer_article(ref, prix, delai, taux, stock) ) = ref
-. stock( creer_article(ref, prix, delai, taux, stock) ) = stock
-. prix( creer_article(ref, prix, delai, taux, stock) ) = prix
-. def livrer( creer_article(ref, prix, delai, taux, stock), quant ) => stock(art) = stock - quant
-. delai_livraison( creer_article(ref, prix, delai, taux, stock) ) = delai
-. taux_promotion( creer_article(ref, prix, delai, taux, stock) ) = taux
-. prix_promotion( creer_article(ref, prix, delai, taux, stock) ) = prix - prix*taux/100
+. art = approvisionner( creer_article(ref, prx, delai, tx, stck), quant ) => stock(art) = stck + quant
+. art = promotionner( creer_article(ref, prx, delai, tx, stck), tx2 ) => taux_promotion(art) = tx2
+. reference( creer_article(ref, prx, delai, tx, stck) ) = ref
+. stock( creer_article(ref, prx, delai, tx, stck) ) = stck
+. prix( creer_article(ref, prx, delai, tx, stck) ) = prx
+. def livrer( creer_article(ref, prx, delai, tx, stck), quant ) => stock(art) = stck - quant
+. delai_livraison( creer_article(ref, prx, delai, tx, stck) ) = delai
+. taux_promotion( creer_article(ref, prx, delai, tx, stck) ) = tx
+. prix_promotion( creer_article(ref, prx, delai, tx, stck) ) = prx - (prx*tx)/100
 
-. promotionner( approvisionner(art, quant), taux ) => stock(art) = quant && taux(art) = taux
-. reference( approvisionner(art, quant) ) = ref(art)
+. art = promotionner( approvisionner(art, quant), tx ) => stock(art) = quant /\ taux_promotion(art) = tx
+. reference( approvisionner(art, quant) ) = reference(art)
 . stock( approvisionner(art, quant) ) = stock(art) + quant
 . prix( approvisionner(art, quant) ) = prix(art)
-. stock(art) = stock and def livrer( approvisionner(art, quant), quant2 ) => stock(art) = stock + quant - quant2
+. stck = stock(art) /\ def livrer( approvisionner(art, quant), quant2 ) => stock(art) = (stck + quant) - quant2
 . delai_livraison( approvisionner(art, quant) ) = delai_livraison(art)
 . taux_promotion( approvisionner(art, quant) ) = taux_promotion(art)
 . prix_promotion( approvisionner(art, quant) ) = prix_promotion(art)
 
-. approvisionner( promotionner(art, taux), quant ) <=> promotionner( approvisionner(art, quant), taux )
-. reference( promotionner(art, taux) ) = ref(art)
-. stock( promotionner(art, taux) ) = stock(art)
-. prix( promotionner(art, taux) ) = prix(art)
-. def livrer( promotionner(art, taux), quant ) => stock(art) = quant and taux(art) = taux
-. delai_livraison( promotionner(art, taux) ) = delai_livraison(art)
-. taux_promotion( promotionner(art, taux) ) = taux
-. prix_promotion( promotionner(art, taux) ) = prix(art) - prix(art)*taux/100
+. art = approvisionner( promotionner(art, tx), quant ) <=> art = promotionner( approvisionner(art, quant), tx )
+. reference( promotionner(art, tx) ) = reference(art)
+. stock( promotionner(art, tx) ) = stock(art)
+. prix( promotionner(art, tx) ) = prix(art)
+. stck = stock(art) /\ def livrer( promotionner(art, tx), quant ) => stock(art) = stck - quant /\ taux_promotion(art) = tx
+. delai_livraison( promotionner(art, tx) ) = delai_livraison(art)
+. taux_promotion( promotionner(art, tx) ) = tx
+. prix_promotion( promotionner(art, tx) ) = prix(art) - (prix(art)*tx)/100
 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-spec Gestion_catalogue00 =
-generated type Systeme ::= creer | changer(Systeme; Collection)
+%%spec Gestion_catalogue00 =
+%%generated type Systeme ::= creer | changer(Systeme; Collection)
