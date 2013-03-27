@@ -14,6 +14,7 @@ then
 generated type Article ::= creer_article(String; Rat; Nat; Nat; Nat)
 preds
 __est_en_rupture_de_stock: Article
+__=__: Article * Article
 
 ops
 reference: Article -> String;
@@ -23,12 +24,13 @@ delai_livraison: Article -> Nat;
 taux_promotion: Article -> Nat;
 prix_promotion: Article -> Rat;
 
-forall art : Article; quant, tx, delai, stck: Nat; prx: Rat; ref: String
+forall art : Article; quant, quant2, tx, tx2, delai, delai2, stck, stck2: Nat; prx, prx2: Rat; ref, ref2: String
 
 %%axiomes
 . art est_en_rupture_de_stock <=> stock(art) = 0
 . reference(art) = reference(art2) => art = art2
 
+. creer_article(ref, prx, delai, tx, stck) = creer_article(ref2, prx2, delai2, tx2, stck2) <=> ref = ref2 /\ prx = prx2 /\ delai = delai2 /\ tx = tx2 /\ stck = stck2
 . reference( creer_article(ref, prx, delai, tx, stck) ) = ref
 . stock( creer_article(ref, prx, delai, tx, stck) ) = stck
 . prix( creer_article(ref, prx, delai, tx, stck) ) = prx
@@ -51,52 +53,53 @@ forall art, art2:Article; quant, quant2, tx, tx2, delai, stck: Nat; prx: Rat; re
 . def livrer(art, quant) <=> quant <= stock(art)
 
 %%axiomes
-. art = approvisionner( creer_article(ref, prx, delai, tx, stck), quant ) <=> art = creer_article(ref, prx, delai, tx, quant)
-. art = promotionner( creer_article(ref, prx, delai, tx, stck), tx2 ) <=> art = creer_article(ref, prx, delai, tx, quant)
+. approvisionner( creer_article(ref, prx, delai, tx, stck), quant ) <=> creer_article(ref, prx, delai, tx, quant)
+. promotionner( creer_article(ref, prx, delai, tx, stck), tx2 ) <=> creer_article(ref, prx, delai, tx, quant)
 . quant <= stck =>
-  art = livrer( creer_article(ref, prx, delai, tx, stck), quant ) <=> art = creer_article(ref, prx, delai, tx, stck-quant)
+  livrer( creer_article(ref, prx, delai, tx, stck), quant ) <=> creer_article(ref, prx, delai, tx, stck-quant)
 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+from GestionArticle get Article
+
 spec GestionCatalogue00 =
-GestionArticles and Set
-then
-generated type Catalogue ::= creer_catalogue(Set[Article], String)
-ops
-reference: Catalogue -> String
-liste_articles: Catalogue -> Set[Article]
-
-forall cat : Catalogue; ref : String; arts : Set[Article]
-
-. reference( creer_catalogue(arts, ref) ) = ref
-. liste_articles( creer_catalogue(arts, ref) ) = arts
+Article and Set[Article fit sort Elem]
+with Set[Article] |-> Catalogue,
+{} |-> catalogue_vide,
+__+__ |-> inserer_article,
+__-__ |-> supprimer_article
 
 end
 
-spec GestionCatalogue =
+spec GestionCatalogue = 
 GestionCatalogue00
 then
 ops
-inserer_article: Catalogue * Article ->? Catalogue
-supprimer_article: Catalogue * Article ->? Catalogue
+referencer: Catalogue * String -> Catalogue
+reference: Catalogue -> String
+liste_articles: Catalogue -> Set[Article]
 
-forall cat : Catalogue; ref : String; set_art: Set[Article]; art : Article
+forall cat : Catalogue; ref, ref2 : String; set_art : Set[Article]
 
-. def inserer_article(cat, art) <=> art %not in% liste_articles(cat)
-. def supprimer_article(cat, art) <=> art %in% liste_articles(cat)
+. reference(cat) = reference(cat2) => cat1 = cat2
 
-. cat = inserer_article( creer_catalogue(set_art, ref), art) <=> cat = creer_catalogue(set_art+art, ref)
-. cat = supprimer_article( creer_catalogue(set_art, ref), art) <=> cat = creer_catalogue(set_art-art, ref)
+. cat = creer_catalogue(ref) <=> cat = creer_catalogue /\ reference(cat) = ref
+
+. reference( inserer_article(cat, art) ) = ref(art)
+. liste_articles( creer_catalogue ) = {}
+. liste_articles( inserer_article(cat, art) ) = liste_articles(cat)+art
 
 end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+from GestionCatalogue get Catalogue
+
 spec GestionCollection00 =
-GestionCatalogue and Set[Catalogue fit sort Elem]
+Catalogue and Set[Catalogue fit sort Elem]
 with Set[Catalogue] |-> Collection,
 ops
 {} |-> collection_vide,
@@ -110,27 +113,39 @@ GestionCollection00 and String
 then
 
 ops
-lancer_collection: String -> Collection;
-reference: Collection -> String;
+referencer: Collection * String -> Collection
+reference: Collection * Catalogue -> String;
 liste_catalogues: Collection -> Set[Catalogue]
 
-forall coll : Collection; cat : Catalogue; ref : String
+forall coll, coll2 : Collection; cat2 : Catalogue; ref : String
 
-. coll = lancer_collection(ref) <=> coll = lancer_collection00 /\ reference(coll) = ref
-. reference(coll) = reference(coll2) => coll = coll2
+. reference(coll) = reference(coll) => coll = coll2
 
-%%.reference( lancer_collection(ref) ) = ref %%already in first axiom
-. reference( ajouter_catalogue(coll, cat) ) = ref(coll)
-. reference( retirer_catalogue(coll, cat) ) = ref(coll)
+. coll = lancer_collection(ref) <=> coll = lancer_collection /\ reference(coll) = ref
 
-. liste_catalogues( lancer_collection(ref) ) = {}
-. liste_catalogues( ajouter_catalogue(coll, cat) ) = liste_catalogues(coll)+cat
-. liste_catalogues( retirer_catalogue(coll, cat) ) = liste_catalogues(coll)-cat
+. reference( ajouter_catalogue(coll, cat) ) = reference(coll)
+. liste_catalogues( creer_collection ) = {}
+. liste_catalogues( inserer_catalogue(coll, cat) ) = liste_catalogues(coll)+cat
 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+from GestionCollection get Colection
+
+spec GestionSysteme00 =
+Collection
+then
+generated type Systeme ::= creer_systeme
+ops
+quelle_collection?: Systeme -> Collection;
+reference_collection: Systeme -> String
+
+forall sys : Systeme; coll, coll2 : Collection; ref : String
+
+. quelle_collection( creer_systeme ) = lancer_collection
+
+end
 
 spec GestionSysteme =
 GestionCollection and String
