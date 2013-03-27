@@ -62,7 +62,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-spec Gestionnaire00[sort Elem] =
+spec GestionElement00[sort Elem] =
 Set[sort Elem]
 with
 sort Set[Elem] |->  Gestionnaire[Elem],
@@ -72,8 +72,8 @@ __+__ |-> inserer,
 __-__ |-> supprimer
 end
 
-spec Gestionnaire[sort Elem] = 
-Gestionnaire00[sort Elem] and String and Set[sort Elem]
+spec GestionElement[sort Elem] = 
+GestionElement00[sort Elem] and String and Set[sort Elem]
 then
 ops
 creer: String -> Gestionnaire[Elem]
@@ -95,7 +95,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 spec GestionCatalogues = 
-GestionArticles and Gestionnaire[Article fit sort Elem]
+GestionArticles and GestionElement[Article fit sort Elem]
 with
 sort Gestionnaire[Article] |-> Catalogue,
 ops
@@ -109,7 +109,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 spec GestionCollections = 
-GestionCatalogues and Gestionnaire[Catalogue fit sort Elem]
+GestionCatalogues and GestionElement[Catalogue fit sort Elem]
 with
 sort Gestionnaire[Catalogue] |-> Collection,
 ops
