@@ -76,13 +76,13 @@ spec GestionElement[sort Elem] =
 GestionElement00[sort Elem] and String and Set[sort Elem]
 then
 ops
-creer: String -> Gestionnaire[Elem]
+creer_gestionnaire: String -> Gestionnaire[Elem]
 reference: Gestionnaire[Elem] -> String
 liste: Gestionnaire[Elem] -> Set[Elem]
 
 forall gest, gest2 : Gestionnaire[Elem]; ref : String; elem : Elem
 
-. gest = creer(ref) <=> gest = creer /\ reference(gest) = ref
+. gest = creer_gestionnaire(ref) <=> gest = creer /\ reference(gest) = ref
 . reference(gest) = reference(gest2) => gest = gest2
 
 . reference( inserer(gest, elem) ) = reference(gest)
@@ -99,7 +99,7 @@ GestionArticles and GestionElement[Article fit sort Elem]
 with
 sort Gestionnaire[Article] |-> Catalogue,
 ops
-creer |-> catalogue_vide,
+creer_gestionnaire |-> catalogue_vide,
 inserer |-> inserer_article,
 supprimer |-> supprimer_article,
 liste |-> liste_articles
@@ -113,7 +113,7 @@ GestionCatalogues and GestionElement[Catalogue fit sort Elem]
 with
 sort Gestionnaire[Catalogue] |-> Collection,
 ops
-creer |-> collection_vide,
+creer_gestionnaire |-> collection_vide,
 inserer |-> inserer_catalogue,
 supprimer |-> supprimer_catalogue,
 liste |-> liste_catalogues
