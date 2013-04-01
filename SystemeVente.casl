@@ -6,6 +6,7 @@ from Basic/Numbers get Rat
 from Basic/CharactersAndStrings get Char
 from Basic/CharactersAndStrings get String
 from Basic/StructuredDatatypes get Set
+from Basic/StructuredDatatypes get Map
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -31,12 +32,8 @@ forall art, art2 : Article; tx, delai : Nat; stck : Int; prx : Rat; ref : String
 . art est_en_rupture_de_stock <=> stock(art) = 0
 . reference(art) = reference(art2) => art = art2
 
-. reference( creer_article(ref, prx, delai, tx, stck) ) = ref
-. stock( creer_article(ref, prx, delai, tx, stck) ) = stck
-. prix( creer_article(ref, prx, delai, tx, stck) ) = prx
-. delai_livraison( creer_article(ref, prx, delai, tx, stck) ) = delai
-. taux_promotion( creer_article(ref, prx, delai, tx, stck) ) = tx
-. prix_promotion( creer_article(ref, prx, delai, tx, stck) ) = prx - (prx*tx)/100
+. art = creer_article(ref, prx, delai, tx, stck) => reference(art) = ref /\ prix(art) = prx /\ delai_livraison(art) = delai /\ taux_promotion(art) = tx /\ stock(art) = stck
+. art = creer_article(ref, prx, delai, tx, stck) <=> prix_promotion(art) = prx - (prx*tx)/100
 
 end
 
@@ -44,16 +41,17 @@ spec GestionArticles =
 GestionArticles00
 then
 ops
-approvisionner: Article * Int -> Article;
+approvisionner: Article * Int ->? Article;
 promotionner: Article * Nat -> Article;
 livrer: Article * Int ->? Article;
 
 forall art :Article; quant, stck: Int; tx, tx2, delai: Nat; prx: Rat; ref: String
 %%ensembles de définition
 . def livrer(art, quant) <=> quant <= stock(art)
+. def approvisionner(art, quant) <=> art est_en_rupture_de_stock
 
 %%axiomes
-. approvisionner( creer_article(ref, prx, delai, tx, stck), quant ) = creer_article(ref, prx, delai, tx, quant)
+. approvisionner( creer_article(ref, prx, delai, tx, 0), quant ) = creer_article(ref, prx, delai, tx, quant)
 . promotionner( creer_article(ref, prx, delai, tx, stck), tx2 ) = creer_article(ref, prx, delai, tx2, stck)
 . quant <= stck => ( livrer( creer_article(ref, prx, delai, tx, stck), quant ) = creer_article(ref, prx, delai, tx, stck-quant) )
 
@@ -62,78 +60,19 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-spec GestionElement00[sort Elem] =
-Set[sort Elem]
+spec Gestionnaire[sort S] =
+Map[sort S][String fit sort T |-> String]
 with
-sort Set[Elem] |->  Gestionnaire[Elem],
+%%sort Map[S][String] |-> Gestionnaire[S]
 ops
-{} |-> creer,
-__+__ |-> inserer,
-__-__ |-> supprimer
-end
-
-spec GestionElement[sort Elem] = 
-GestionElement00[sort Elem] and String and Set[sort Elem]
-then
-ops
-creer_gestionnaire: String -> Gestionnaire[Elem]
-reference: Gestionnaire[Elem] -> String
-liste: Gestionnaire[Elem] -> Set[Elem]
-
-forall gest, gest2 : Gestionnaire[Elem]; ref : String; elem : Elem
-
-. gest = creer_gestionnaire(ref) <=> gest = creer /\ reference(gest) = ref
-. reference(gest) = reference(gest2) => gest = gest2
-
-. reference( inserer(gest, elem) ) = reference(gest)
-. liste( creer ) = {}
-. liste( inserer(gest, elem) ) = liste(gest)+elem
+empty |-> gestionnaire_vide,
+__[__/__] |-> inserer,
+__-__ |-> supprimer,
+lookup |-> reference,
+dom |-> liste
 
 end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-spec GestionCatalogues = 
-GestionArticles and GestionElement[Article fit sort Elem]
-with
-sort Gestionnaire[Article] |-> Catalogue,
-ops
-creer_gestionnaire |-> catalogue_vide,
-inserer |-> inserer_article,
-supprimer |-> supprimer_article,
-liste |-> liste_articles
-end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-spec GestionCollections = 
-GestionCatalogues and GestionElement[Catalogue fit sort Elem]
-with
-sort Gestionnaire[Catalogue] |-> Collection,
-ops
-creer_gestionnaire |-> collection_vide,
-inserer |-> inserer_catalogue,
-supprimer |-> supprimer_catalogue,
-liste |-> liste_catalogues
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-spec GestionSysteme =
-Collection
-then
-generated type Systeme ::= creer_systeme | changer_collection(Systeme; Collection)
-ops
-quelle_collection: Systeme -> Collection;
-reference_collection: Systeme -> String
-
-forall sys : Systeme; coll, coll2 : Collection; ref : String
-
-. quelle_collection( creer_systeme ) = collection_vide
-. quelle_collection( changer_collection(sys, coll) ) = coll
-
-. reference_collection(sys) = reference( quelle_collection(sys) )
-
-end
