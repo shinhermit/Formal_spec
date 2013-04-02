@@ -13,27 +13,25 @@ from Basic/StructuredDatatypes get Map
 spec GestionArticles00 =
 String and Rat and Nat and Int
 then
-generated type Article ::= creer_article(String; Rat; Nat; Nat; Int)
+generated type Article ::= creer_article(Rat; Nat; Nat; Int)
 preds
 __est_en_rupture_de_stock: Article
 
 ops
-reference: Article -> String;
 prix: Article -> Rat;
 stock: Article -> Int;
 delai_livraison: Article -> Nat;
 taux_promotion: Article -> Nat;
 prix_promotion: Article -> Rat;
 
-forall art, art2 : Article; tx, delai : Nat; stck : Int; prx : Rat; ref : String
+forall art, art2 : Article; tx, delai : Nat; stck : Int; prx : Rat
 
 %%axiomes
 . stock(art) >= 0
 . art est_en_rupture_de_stock <=> stock(art) = 0
-. reference(art) = reference(art2) => art = art2
 
-. art = creer_article(ref, prx, delai, tx, stck) => reference(art) = ref /\ prix(art) = prx /\ delai_livraison(art) = delai /\ taux_promotion(art) = tx /\ stock(art) = stck
-. art = creer_article(ref, prx, delai, tx, stck) <=> prix_promotion(art) = prx - (prx*tx)/100
+. art = creer_article(prx, delai, tx, stck) => prix(art) = prx /\ delai_livraison(art) = delai /\ taux_promotion(art) = tx /\ stock(art) = stck
+. prix_promotion( creer_article(prx, delai, tx, stck) ) = prx - (prx*tx)/100
 
 end
 
@@ -45,15 +43,17 @@ approvisionner: Article * Int ->? Article;
 promotionner: Article * Nat -> Article;
 livrer: Article * Int ->? Article;
 
-forall art :Article; quant, stck: Int; tx, tx2, delai: Nat; prx: Rat; ref: String
+forall art, art2 :Article; quant: Int; tx: Nat
 %%ensembles de définition
 . def livrer(art, quant) <=> quant <= stock(art)
 . def approvisionner(art, quant) <=> art est_en_rupture_de_stock
 
 %%axiomes
-. approvisionner( creer_article(ref, prx, delai, tx, 0), quant ) = creer_article(ref, prx, delai, tx, quant)
-. promotionner( creer_article(ref, prx, delai, tx, stck), tx2 ) = creer_article(ref, prx, delai, tx2, stck)
-. quant <= stck => ( livrer( creer_article(ref, prx, delai, tx, stck), quant ) = creer_article(ref, prx, delai, tx, stck-quant) )
+. def approvisionner(art,quant) =>
+     ( art2 = approvisionner(art,quant) <=> art2 = creer_article( prix(art), delai_livraison(art), taux_promotion(art), quant) )
+. art2 = promotionner(art, tx) <=> art2 = creer_article( prix(art), delai_livraison(art), tx, stock(art) )
+. def livrer(art, quant) =>
+     ( art2 = livrer(art, quant) <=> art2 = creer_article( prix(art), delai_livraison(art), taux_promotion(art), stock(art) - quant ) )
 
 end
 
@@ -61,18 +61,62 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 spec Gestionnaire[sort S] =
-Map[sort S][String fit sort T |-> String]
+String and Map[sort S][String fit sort T |-> String]
 with
-%%sort Map[S][String] |-> Gestionnaire[S]
+sort Map[S, String] |-> Gestionnaire[S],
 ops
 empty |-> gestionnaire_vide,
 __[__/__] |-> inserer,
 __-__ |-> supprimer,
 lookup |-> reference,
 dom |-> liste
+then
+
+forall gest : Gestionnaire[S]; s1, s2 : S
+%% On rajoute la propriété d'injectivité
+. def reference(s1, gest) /\ def reference(s2, gest) =>
+     ( reference(s1, gest) = reference(s2, gest) => s1 = s2 )
 
 end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+spec GestionCatalogues =
+GestionArticles and Gestionnaire[sort Article fit sort S |-> Article]
+with
+sort Gestionnaire[Article] |-> Catalogue
+
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+spec GestionCollections =
+GestionCatalogues and Gestionnaire[sort Catalogue fit sort S |-> Catalogue]
+with
+sort Gestionnaire[Catalogue] |-> Collection
+
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+spec Systeme =
+GestionCollections and String
+then
+generated type Systeme ::= systeme_vide | changer_collection(Systeme, Collection, String)
+ops
+reference: Collection * Systeme ->? String
+collection_de__: Systeme ->? Collection
+
+forall sys, sys2: Systeme; coll, coll2 : Collection; ref : String
+%%ensembles de définitions
+. def collection_de sys <=> not sys = systeme_vide
+. def reference(coll, sys) <=> def collection_de sys /\ (collection_de sys = coll)
+
+%% Axiomes
+. collection_de changer_collection(sys, coll, ref) = coll
+. sys2 = changer_collection(sys, coll, ref) => reference(coll, sys2 ) = ref
+
+end
