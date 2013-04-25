@@ -6,7 +6,6 @@ from Basic/Numbers get Rat
 from Basic/CharactersAndStrings get Char
 from Basic/CharactersAndStrings get String
 from Basic/StructuredDatatypes get Set
-from Basic/StructuredDatatypes get Map
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -60,63 +59,72 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-spec Gestionnaire[sort S] =
-String and Map[sort S][String fit sort T |-> String]
+
+spec Gestionnaire00[sort S] =
+Set[sort S]
 with
-sort Map[S, String] |-> Gestionnaire[S],
+sort Set[S] |-> Gestionnaire[S],
 ops
-empty |-> gestionnaire_vide,
-__[__/__] |-> inserer,
-__-__ |-> supprimer,
-lookup |-> reference,
-dom |-> liste
+{} |-> vide,
+__+__ |-> inserer,
+__-__ |-> supprimer
+end
+
+spec Gestionnaire[sort S] =
+Gestionnaire00[sort S]
+and String
 then
+ops
+gestionnaire_vide: String -> Gestionnaire[S]
+reference: Gestionnaire[S] -> String
 
-forall gest : Gestionnaire[S]; s1, s2 : S
-%% On rajoute la propriété d'injectivité
-. def reference(s1, gest) /\ def reference(s2, gest) =>
-     ( reference(s1, gest) = reference(s2, gest) => s1 = s2 )
-
+forall gest, gest2 : Gestionnaire[S]; ref : String
+. gest = gestionnaire_vide(ref) <=> gest = vide /\ reference(gest) = ref
+. reference(gest) = reference(gest2) => gest = gest2
 end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-spec GestionCatalogues =
+
+spec GestionCatalogues = 
 GestionArticles and Gestionnaire[sort Article fit sort S |-> Article]
 with
-sort Gestionnaire[Article] |-> Catalogue
-
+sort Gestionnaire[Article] |-> Catalogue,
+op gestionnaire_vide |-> catalogue_vide
 end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-spec GestionCollections =
+
+spec GestionCollections = 
 GestionCatalogues and Gestionnaire[sort Catalogue fit sort S |-> Catalogue]
 with
-sort Gestionnaire[Catalogue] |-> Collection
-
+sort Gestionnaire[Catalogue] |-> Collection,
+op gestionnaire_vide |-> collection_vide
 end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-spec Systeme =
+
+spec GestionSysteme =
 GestionCollections and String
 then
-generated type Systeme ::= systeme_vide | changer_collection(Systeme, Collection, String)
+generated type Systeme ::= systeme_vide(String) | changer_collection(Systeme, Collection)
 ops
-reference: Collection * Systeme ->? String
+reference: Systeme -> String
 collection_de__: Systeme ->? Collection
 
 forall sys, sys2: Systeme; coll, coll2 : Collection; ref : String
 %%ensembles de définitions
-. def collection_de sys <=> not sys = systeme_vide
-. def reference(coll, sys) <=> def collection_de sys /\ (collection_de sys = coll)
+. def collection_de sys <=> not sys = systeme_vide(ref)
 
 %% Axiomes
-. collection_de changer_collection(sys, coll, ref) = coll
-. sys2 = changer_collection(sys, coll, ref) => reference(coll, sys2 ) = ref
+. reference( systeme_vide(ref) ) = ref
+. reference( changer_collection(sys, coll) ) = reference(sys)
+. reference(sys) = reference(sys2) => sys = sys2
 
+. collection_de changer_collection(sys, coll) = coll
 end
