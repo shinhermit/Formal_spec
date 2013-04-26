@@ -3,13 +3,12 @@ library SystemeVente
 from Basic/Numbers get Nat
 from Basic/Numbers get Int
 from Basic/Numbers get Rat
-from Basic/CharactersAndStrings get Char
 from Basic/CharactersAndStrings get String
 from Basic/StructuredDatatypes get Set
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-spec GestionArticles00 =
+spec Article00 =
 String and Rat and Nat and Int
 then
 generated type Article ::= creer_article(Rat; Nat; Nat; Int)
@@ -34,8 +33,8 @@ forall art, art2 : Article; tx, delai : Nat; stck : Int; prx : Rat
 
 end
 
-spec GestionArticles =
-GestionArticles00
+spec Article =
+Article00
 then
 ops
 approvisionner: Article * Int ->? Article;
@@ -87,8 +86,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-spec GestionCatalogues = 
-GestionArticles and Gestionnaire[sort Article fit sort S |-> Article]
+spec Catalogue = 
+Article and Gestionnaire[sort Article fit sort S |-> Article]
 with
 sort Gestionnaire[Article] |-> Catalogue,
 op gestionnaire_vide |-> catalogue_vide
@@ -98,8 +97,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-spec GestionCollections = 
-GestionCatalogues and Gestionnaire[sort Catalogue fit sort S |-> Catalogue]
+spec Collection = 
+Catalogue and Gestionnaire[sort Catalogue fit sort S |-> Catalogue]
 with
 sort Gestionnaire[Catalogue] |-> Collection,
 op gestionnaire_vide |-> collection_vide
@@ -109,8 +108,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-spec GestionSysteme =
-GestionCollections and String
+spec Systeme =
+Collection and String
 then
 generated type Systeme ::= systeme_vide(String) | changer_collection(Systeme, Collection)
 ops
@@ -127,4 +126,41 @@ forall sys, sys2: Systeme; coll, coll2 : Collection; ref : String
 . reference(sys) = reference(sys2) => sys = sys2
 
 . collection_de changer_collection(sys, coll) = coll
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+arch spec ARCHITECTURE_SYSTEME_VENTE =
+%% Units to be implemented
+units
+NAT: Nat
+INT: Int given NAT
+RAT: Rat given INT
+STRING : String given NAT
+SET: Set[sort elem] given NAT
+
+F_ARTICLE00: String * Rat * Nat * Int -> Article00 %%first class
+ARTICLE00 = F_ARTICLE00[STRING][RAT][NAT][INT]
+ARTICLE: Article given ARTICLE00
+
+GESTIONNAIRE00: Gestionnaire00[sort S] given SET
+F_GESTIONNAIRE: Gestionnaire00[sort S] * String -> Gestionnaire[sort S]
+GESTIONNAIRE = F_GESTIONNAIRE[GESTIONNAIRE00][STRING]
+
+F_CATALOGUE:  Article * Gestionnaire[sort Article fit sort S |-> Article] -> Catalogue
+GESTIONNAIRE_ARTICLE: Gestionnaire[Article fit S |-> Article] given ARTICLE %% Erreur compilation: Symbols shared between actual parameter and body must be in formal parameter:
+CATALOGUE = F_CATALOGUE[ARTICLE][GESTIONNAIRE_ARTICLE]
+
+F_COLLECTION:  Catalogue * Gestionnaire[sort Catalogue fit sort S |-> Catalogue] -> Collection
+GESTIONNAIRE_CATALOGUE: Gestionnaire[Catalogue fit S |-> Catalogue] given CATALOGUE %% Erreur compilation: Symbols shared between actual parameter and body must be in formal parameter:
+COLLECTION = F_COLLECTION[CATALOGUE][GESTIONNAIRE_CATALOGUE]
+
+F_SYSTEME: Collection * String -> Systeme
+SYSTEME_VENTE = F_SYSTEME[COLLECTION][STRING]
+
+%% units linking procedure
+result SYSTEME_VENTE
+
 end
