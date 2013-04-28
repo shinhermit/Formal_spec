@@ -1,0 +1,661 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+
+\author{Josuah Aron}
+\date{28/04/2013}
+\title{TP1 génie logigicel: interprétation et vérification d'une spécification}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Introduction}
+Dans les obligations de preuve, Pré et Post désignent les précondition et postcondition de la spécification (et non de l'interprétation) de l'opération considérée, appliquées aux opérations du module (implémentations).\\
+Lorsque cela est utile, nous suffixons Pré et Post par le nom de l'opération, afin de distinguer les différentes formules citées. Par exemple, \texttt{Pré\_calcul} désigne la précondition de l'opération \texttt{calcul}.
+
+\section{Le module Article00}
+La spécification d'architecture:\\
+{\tt
+F\_ARTICLE00: String * Rat * Nat * Int $\rightarrow$ Article00\\
+ARTICLE00 = F\_ARTICLE00[STRING][RAT][NAT][INT]\\
+}
+indique que:
+\begin{enumerate}
+\item le module de première classe \texttt{F\_ARTICLE00}\footnote{F comme \og First class\ \fg} fournira un implémentation de la spécification \texttt{Article00} à condition qu'on lui fournisse les implémentations des spécification String, Rat, Nat et Int (cf. ref \cite{Architectural:specifications:in:CASL});
+\item le module \texttt{ARTICLE00} implémente la spécification \texttt{Article00} par instanciation de la première classe \texttt{F\_ARTICLE00} avec les modules \texttt{STRING, RAT, NAT} et \texttt{INT}.
+\end{enumerate}
+
+\subsection{Interprétation de la sort Article}
+\subsubsection{La structure de donnée Article}
+\begin{verbatim}
+struct Article
+  ref: String
+  prix: Rat
+  stock: Int
+  delai: Nat
+  taux: Nat
+\end{verbatim}
+{\tt
+\underline{Invariant:}
+$$ prix \ge 0 \wedge stock \ge 0 $$
+}
+
+\subsection{L'opération creer\_article}
+\subsubsection{Interprétation}
+{\tt
+creer\_article(ref:String, prix:Rat, delai:Nat; taux:Nat; stock:Int)  article : struct Article\\
+\underline{Pré}
+$$ prix \ge 0 \wedge stock \ge 0$$
+\underline{Post}
+$$ article.ref = ref \wedge article.prix = prix \wedge article.stock = stock $$
+$$  \wedge\ article.delai = delai \wedge article.taux = taux $$
+}
+
+\subsubsection{Spécification}
+{\tt
+creer\_article(ref:String, prix:Rat, delai:Nat; taux:Nat; stock:Int)  article : struct Article\\
+\underline{Pré(ref, prix, delai, taux, stock)}
+$$ prix \ge 0 \wedge stock \ge 0$$
+\underline{Post(ref, prix, delai, taux, stock, article)}
+$$ reference(article) = ref \wedge prix(article) = prix \wedge delai\_livraison(article) = delai$$
+$$ \wedge\ taux\_promotion(article) = taux \wedge stock(article) = stock$$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall ref:String, prix:Rat, delai,taux:Nat, stock:Int, $$
+$$ Pre(ref, prix, delai, taux, stock) \implies creer\_article(ref, prix, delai, taux, stock): struct\ Article $$
+$$\wedge\ Post(ref, prix, delai, taux, stock, article) $$
+
+L'expression $creer\_article(ref, prix, delai, taux, stock): struct\ Article$ signifie que le résultat de l'opération préserve l'invariant du type.
+
+\subsection{L'opération \_\_est\_en\_rupture\_de\_stock}
+\subsubsection{Interprétation}
+{\tt
+\_\_est\_en\_rupture\_de\_stock(article:Article)  rupture:booléen\\
+\underline{Pré(article)}
+$$ true $$
+\underline{Post(article, rupture)}
+$$ rupture \Leftrightarrow article.stock = 0$$
+}
+
+\subsubsection{Spécification}
+{\tt
+\_\_est\_en\_rupture\_de\_stock(article:Article)  rupture:booléen\\
+\underline{Pré(article)}
+$$ true$$
+\underline{Post(article, rupture)}
+$$ rupture \Leftrightarrow stock(article) = 0$$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ art:Article,\ rupture:booléen,$$
+$$ rupture = art\ est\_en\_rupture\_de\_stock \implies Post(art, rupture) $$
+
+\subsection{L'opération reference}
+\subsubsection{Interprétation}
+{\tt
+reference(article:Article)  ref:String\\
+\underline{Pré(article)}
+$$ true $$
+\underline{Post(article, ref)}
+$$ ref = article.ref $$
+}
+
+\subsubsection{Spécification}
+{\tt
+reference(art:Article)  ref:String\\
+\underline{Pré(art)}
+$$ true $$
+\underline{Post(art, ref)}
+$$ art = creer\_article(\text{ref},\ prix(art),\ delai\_livraison(art),\ taux\_promotion(art),\ stock(art)) $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ art:Article,\ ref:String,\quad ref = reference(art) \implies Post(art,ref) $$
+
+\subsection{L'opération prix}
+\subsubsection{Interprétation}
+{\tt
+prix(article:Article)  lePrix:Rat\\
+\underline{Pré(art)}
+$$ true $$
+\underline{Post(article, lePrix)}
+$$ lePrix = article.prix $$
+}
+
+\subsubsection{Spécification}
+{\tt
+prix(art:Article)  lePrix:Rat\\
+\underline{Pré(art)}
+$$ true $$
+\underline{Post(art, lePrix)}
+$$ art = creer\_article(reference(art),\ \text{lePrix},\ delai\_livraison(art),\ taux\_promotion(art),\ stock(art)) $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ art:Article,\ lePrix:Rat,\quad lePrix = prix(art) \implies Post(art,lePrix) $$
+
+\subsection{L'opération stock}
+\subsubsection{Interprétation}
+{\tt
+stock(article:Article) leStock:Int\\
+\underline{Pré(article)}
+$$ true $$
+\underline{Post(article, leStock)}
+$$ stock = article.stock $$
+}
+
+\subsubsection{Spécification}
+{\tt
+stock(art:Article) leStock:Int\\
+\underline{Pré(art)}
+$$ true $$
+\underline{Post(art, leStock)}
+$$ art = creer\_article(reference(art),\ prix(art),\ delai\_livraison(art),\ taux\_promotion(art),\ \text{leStock}) $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ art:Article,\ leStock:Int,\quad leStock = stock(art) \implies Post(art, leStock)$$
+
+\subsection{L'opération delai\_livraison}
+\subsubsection{Interprétation}
+{\tt
+delai\_livraison(article:Article) delai:Nat\\
+\underline{Pré(article)}
+$$ true $$
+\underline{Post(article, delai)}
+$$ delai = article.delai $$
+}
+
+\subsubsection{Spécification}
+{\tt
+delai\_livraison(article:Article) delai:Nat\\
+\underline{Pré(art)}
+$$ true $$
+\underline{Post(art, delai)}
+$$ art = creer\_article(reference(art),\ prix(art),\ \text{delai},\ taux\_promotion(art),\ stock(art)) $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ art:Article,\ delai:Nat,\quad delai = delai\_livraison(art) \implies Post(art, delai) $$
+
+\subsection{L'opération taux\_promotion}
+\subsubsection{Interprétation}
+{\tt
+taux\_promotion(article:Article) taux:Nat\\
+\underline{Pré(article)}
+$$ true $$
+\underline{Post(article, taux)}
+$$ taux = article.taux $$
+}
+
+\subsubsection{Spécification}
+{\tt
+taux\_promotion(art:Article) taux:Nat\\
+\underline{Pré(art)}
+$$ true $$
+\underline{Post(art, taux)}
+$$ art = creer\_article(reference(art),\ prix(art),\ delai\_livraison(art),\ \text{taux},\ stock(art)) $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ art:Article,\ taux:Nat,\quad taux = taux\_promotion(art) \implies Post(art, taux) $$
+
+\subsection{L'opération prix\_promotion}
+\subsubsection{Interprétation}
+{\tt
+prix\_promotion(article:Article) promo:Rat\\
+\underline{Pré(article)}
+$$ true $$
+\underline{Post(article, promo)}
+$$ promo = article.prix - (article.prix * article.taux) / 100 $$
+}
+
+\subsubsection{Spécification}
+{\tt
+prix\_promotion(art:Article) promo:Rat\\
+\underline{Pré(art)}
+$$ true $$
+\underline{Post(art, promo)}
+$$ promo = prix(art) - ( prix(art) * taux\_promotion(art) )/100$$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ art:Article,\ promo:Rat,\quad promo = prix\_promotion(art) \implies Post(art, promo) $$
+
+\section{Le module Article}
+La spécification d'architecture:\\
+{\tt
+ARTICLE: Article given ARTICLE00\\
+}
+indique que le module \texttt{ARTICLE} implémente la spécification \texttt{Article} en utilisant le module \texttt{ARTICLE00} (cf. ref \cite{Architectural:specifications:in:CASL}). 
+
+\subsection{L'opération approvisionner}
+\subsubsection{Interprétation}
+{\tt
+approvisionner(art1:Article, quant:Int) art2:Article\\
+\underline{Pré(art1, quant)}
+$$ quant \ge 0\ \wedge\ art1.stock = 0$$
+\underline{Post(art1, quant, art2)}
+$$ art2.stock = \text{quant}\ \wedge\ art2.ref = art1.ref\ \wedge\ art2.prix = art1.prix$$
+$$ \ \wedge\ art2.delai = art1.delai\ \wedge\  art2.taux = art1.taux$$
+}
+
+\subsubsection{Spécification}
+{\tt
+approvisionner(art1:Article, quant:Int) art2:Article\\
+\underline{Pré(art1, quant)}
+$$ quant \ge 0\ \wedge\ art est\_en\_rupture\_de\_stock$$
+\underline{Post(art1, quant, art2)}
+$$ stock(art2) = \text{quant}\ \wedge\ reference(art2) = reference(art2)\ \wedge\ prix(art1) = prix(art2) $$
+$$ \ \wedge\ taux\_promotion(art2) = taux\_promotion(art1)\ \wedge\ prix\_promotion(art2) = prix\_promotion(art2)$$
+$$ \ \wedge\ delai\_livraison(art2) = delai\_livraison(art1)$$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ art1,art2:Article, quant:Int,$$
+$$ Pre(art1,quant)\ \wedge\ art2 = approvisionner(art1,quant) \implies\ Post(art1, quant, art2) $$
+
+\subsection{L'opération promotionner}
+\subsubsection{Interprétation}
+{\tt
+promotionner(art1:Article, taux:Nat) art2:Article\\
+\underline{Pré(art1, taux)}
+$$ true $$
+\underline{Post(art1, taux, art2)}
+$$ art2.taux = \text{taux}\ \wedge\ art2.ref = art1.ref\ \wedge\ art2.prix = art1.prix$$
+$$ \ \wedge\ art2.delai = art1.delai\ \wedge\  art2.stock = art1.stock$$
+}
+
+\subsubsection{Spécification}
+{\tt
+promotionner(art1:Article, taux:Nat) art2:Article\\
+\underline{Pré(art1, taux)}
+$$ true $$
+\underline{Post(art1, taux, art2)}
+$$ taux\_promotion(art2) = \text{taux}\ \wedge\ reference(art2) = reference(art2)\ \wedge\ prix(art1) = prix(art2) $$
+$$ \ \wedge\ stock(art2) = stock(art1)\ \wedge\ prix\_promotion(art2) = prix\_promotion(art2)$$
+$$ \ \wedge\ delai\_livraison(art2) = delai\_livraison(art1)$$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ art1,art2:Article, taux:Nat,$$
+$$ art2 = promotionner(art1,taux) \implies\ Post(art1, taux, art2) $$
+
+\subsection{L'opération livrer}
+\subsubsection{Interprétation}
+{\tt
+livrer(art1:Article, quant:Int) art2:Article\\
+\underline{Pré(art1, quant)}
+$$ quant \ge 0\ \wedge\ quant \le art1.stock $$
+\underline{Post(art1, quant, art2)}
+$$ art2.stock = art1.stock - \text{taux}\ \wedge\ art2.ref = art1.ref\ \wedge\ art2.prix = art1.prix$$
+$$ \ \wedge\ art2.delai = art1.delai\ \wedge\  art2.stock = art1.stock$$
+}
+
+\subsubsection{Spécification}
+{\tt
+livrer(art1:Article, quant:Int) art2:Article\\
+\underline{Pré(art1, quant)}
+$$ quant \ge 0\ \wedge\ quant \le stock(art1) $$
+\underline{Post(art1, quant, art2)}
+$$ stock(art2) = stock(art1) - \text{quant}\ \wedge\ reference(art2) = reference(art2)\ \wedge\ prix(art1) = prix(art2) $$
+$$ \ \wedge\ taux\_promotion(art2) = taux\_promotion(art1)\ \wedge\ prix\_promotion(art2) = prix\_promotion(art2)$$
+$$ \ \wedge\ delai\_livraison(art2) = delai\_livraison(art1)$$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ art1,art2:Article, quant:Int,$$
+$$ Pre(art1,quant)\ \wedge\ art2 = livrer(art1,quant) \implies\ Post(art1, quant, art2) $$
+
+\section{Le module Gestionnaire00}
+La spécification d'architecture:\\
+{\tt
+NAT: Nat\\
+SET: Set[sort elem] given NAT\\
+GESTIONNAIRE00: Gestionnaire00[sort S] given SET\\
+}
+indique que:
+\begin{enumerate}
+\item le module \texttt{NAT} implémente la spécification \texttt{Nat}
+\item le module \texttt{SET} implémente la spécification générique Set en utilisant le module \texttt{NAT}
+\item le module \texttt{GESTIONNAIRE00} implémente la spécification générique \texttt{Gestionnaire00[sort S]} en utilisant le module \texttt{SET}
+\end{enumerate}
+
+\subsection{Interprétation de la sort Gestionnaire}
+\subsubsection{La structure de donées générique Gestionnaire}
+\begin{verbatim}
+struct Gestionnaire[elem]
+  elems: Set[elem]
+  ref: String
+\end{verbatim}
+
+\subsection{L'opération vide}
+\subsubsection{Interprétation}
+{\tt
+vide() gest:Gestionnaire\\
+\underline{Pré}
+$$ true $$
+\underline{Post(gest)}
+$$ gest.elems = \{\} $$
+}
+
+\subsubsection{Spécification}
+{\tt
+vide() gest:Gestionnaire\\
+\underline{Pré}
+$$ true $$
+\underline{Post(gest)}
+$$ gest = \{\} $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ gest:Gestionnaire,\quad gest = vide \implies gest = \{\} $$
+
+\subsection{L'opération inserer}
+\subsubsection{Interprétation}
+{\tt
+inserer(gest1:Gestionnaire[Elem], elem:Elem) gest2:Gestionnaire[Elem]\\
+\underline{Pré(gest1, elem)}
+$$ true $$
+\underline{Post(gest1, elem, gest2)}
+$$ gest2.elems = gest2.elems + elem\ \wedge\ gest2.ref = gest1.ref $$
+}
+
+\subsubsection{Spécification}
+{\tt
+inserer(gest1:Gestionnaire[Elem], elem:Elem) gest2:Gestionnaire[Elem]\\
+\underline{Pré(gest1, elem)}
+$$ true $$
+\underline{Post(gest1, elem, gest2)}
+$$ gest2 = gest1 + elem $$
+où + est l'opeération de Set[sort elem]
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ gest1,gest2:Gestionnaire[Elem],\ elem:Elem,$$
+$$gest2 = inserer(gest1, elem) \implies Post(gest1, elem, gest2) $$
+
+\subsection{L'opération supprimer}
+\subsubsection{Interprétation}
+{\tt
+supprimer(gest1:Gestionnaire[Elem], elem:Elem) gest2:Gestionnaire[Elem]\\
+\underline{Pré}
+$$ Pre\_supprimer(gest1,elem) \Leftrightarrow Pre\_\_-\_\_(gest1.elems,elem) $$
+\underline{Post}
+$$ Post\_supprimer(gest1,elem) \Leftrightarrow Post\_\_-\_\_(gest1.elems,elem,gest2.elems) $$
+}
+
+\subsubsection{Spécification}
+{\tt
+supprimer(gest1:Gestionnaire[Elem], elem:Elem) gest2:Gestionnaire[Elem]\\
+\underline{Pré}
+$$ Pre\_supprimer(gest1,elem) \Leftrightarrow Pre\_\_-\_\_(gest1,elem) $$
+\underline{Post}
+$$ Post\_supprimer(gest1,elem,gest2) \Leftrightarrow Post\_\_-\_\_(gest1,elem,gest2) $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ gest1,gest2:Gestionnaire[Elem],\ elem:Elem,$$
+$$ Pre(gest1,elem)\ \wedge\ gest2 = supprimer(gest1,elem) \implies Post(gest1,elem,gest2)$$
+
+\section{Le module Gestionnaire}
+La spécification d'architecture:\\
+{\tt
+NAT: Nat
+STRING : String given NAT
+F\_GESTIONNAIRE: Gestionnaire00[sort S] * String $\rightarrow$ Gestionnaire[sort S]\\
+GESTIONNAIRE = F\_GESTIONNAIRE[GESTIONNAIRE00][STRING]\\
+}
+indique que:
+\begin{enumerate}
+\item le module \texttt{NAT} impleménte la spécification \texttt{Nat}
+\item le module \texttt{STRING} implémente la spécification \texttt{String} en utilisant le module NAT
+\item le module de première classe \texttt{F\_GESTIONNAIRE} fournira une implémentation de la spécification générique \texttt{Gestionnaire} à condition qu'on lui fournisse une implémentation des spécifications \texttt{Gestionnaire00} et \texttt{String};
+\item le module \texttt{GESTIONNAIRE} implémente la spécification \texttt{Gestionnaire} par instanciation de la première classe \texttt{F\_GESTIONNAIRE}, avec les modules \texttt{GESTIONNAIRES00} et \texttt{STRING}.
+\end{enumerate}
+
+\subsection{L'opération gestionnaire}
+\subsubsection{Interprétation}
+{\tt
+gestionnaire\_vide(ref:String) gest:Gestionnaire[S]\\
+\underline{Pré(ref)}
+$$ true $$
+\underline{Post(ref, gest)}
+$$ Post\_vide\ \wedge\ gest.ref = ref$$
+}
+
+\subsubsection{Spécification}
+{\tt
+gestionnaire\_vide(ref:String) gest:Gestionnaire[S]\\
+\underline{Pré(ref)}
+$$ true $$
+\underline{Post(ref, gest)}
+$$ Post\_vide\ \wedge\ reference(gest) = ref$$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ ref:String, gest:Gestionnaire,\quad gest = gestionnaire\_vide(ref) \implies Post(ref, gest)$$
+
+\subsection{L'opération reference}
+\subsubsection{Interprétation}
+{\tt
+reference(gest:Gestionnaire[S]) ref:String\\
+\underline{Pré(gest)}
+$$ true $$
+\underline{Post(gest, ref)}
+$$ ref = gest.ref $$
+}
+
+\subsubsection{Spécification}
+{\tt
+reference(gest:Gestionnaire[S]) ref:String\\
+\underline{Pré(gest)}
+$$ true $$
+\underline{Post(gest, ref)}
+$$ gest = gestionnaire\_vide(\text{ref}) $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall gest:Gestionnaire[Elem], ref:String, \quad ref = reference(gest) \implies Post(gest, ref) $$
+
+\section{Le module Catalogue}
+La spécification d'architecture:\\
+{\tt
+F\_CATALOGUE:  Article * Gestionnaire[sort Article fit sort S |$\rightarrow$ Article] $\rightarrow$ Catalogue\\
+GESTIONNAIRE\_ARTICLE: Gestionnaire[sort Article fit sort S |$\rightarrow$ Article] given ARTICLE\\
+CATALOGUE = F\_CATALOGUE[ARTICLE][GESTIONNAIRE\_ARTICLE]\\
+}
+indique que:
+\begin{enumerate}
+\item le module de première classe \texttt{F\_CATALOGUE} fournira une implémentation de la spécification \texttt{Catalogue} à condition qu'on lui fournisse les implémentations des spécifications \texttt{Article} et \texttt{Gestionnaire[sort Article]};
+\item le module intermédiaire \texttt{GESTIONNAIRE\_ARTICLE} implémente la spécification \texttt{Gestionnaire[sort Article]};
+\item le module \texttt{CATALOGUE} implémente la spécification \texttt{Catalogue} par instanciation de la première classe \texttt{F\_CATALOGUE} avec les modules \texttt{ARTICLE} et \texttt{GESTIONNAIRE\_ARTICLE}.
+\end{enumerate}
+
+\subsection{Interprétation de la sort Catalogue}
+\subsubsection{La spécialisation Catalogue}
+\begin{verbatim}
+struct Catalogue = Gestionnaire[struct Article]
+\end{verbatim}
+
+\subsection{L'opération catalogue\_vide}
+\subsubsection{Interprétation}
+{\tt
+catalogue\_vide(ref:String) cat:Catalogue\\
+\underline{Pré}
+$$ Pré\_catalogue\_vide\ \Leftrightarrow\ Pré\_gestionnaire\_vide $$
+\underline{Post}
+$$ Post\_catalogue\_vide \Leftrightarrow\ Prost\_gestionnaire\_vide $$
+}
+
+\subsubsection{Spécification}
+{\tt
+catalogue\_vide(ref:String) cat:Catalogue\\
+\underline{Pré}
+$$ Pré\_catalogue\_vide\ \Leftrightarrow\ Pré\_gestionnaire\_vide $$
+\underline{Post}
+$$ Post\_catalogue\_vide \Leftrightarrow\ Prost\_gestionnaire\_vide $$
+}
+
+\subsubsection{Obligation de preuve}
+Obligation de preuve de \texttt{gestionnaire\_vide}.
+
+\section{Le module Collection}
+La spécification d'architecture:\\
+{\tt
+F\_COLLECTION:  Catalogue * Gestionnaire[sort Catalogue fit sort S |$\rightarrow$ Catalogue] $\rightarrow$ Collection\\
+GESTIONNAIRE\_CATALOGUE: Gestionnaire[sort Catalogue fit sort S |$\rightarrow$ Catalogue] given CATALOGUE\\
+COLLECTION = F\_COLLECTION[CATALOGUE][GESTIONNAIRE\_CATALOGUE]\\
+}
+indique que:
+\begin{enumerate}
+\item le module de première classe \texttt{F\_COLLECTION} fournira une implémentation de la spécification \texttt{Catalogue} à condition qu'on lui fournisse les implémentations des spécifications \texttt{Catalogue} et \texttt{Gestionnaire[sort Catalogue]};
+\item le module intermédiaire \texttt{GESTIONNAIRE\_CATALOGUE} implémente la spécification \texttt{Gestionnaire[sort Catalogue]};
+\item le module \texttt{COLLECTION} implémente la spécification \texttt{Collection} par instanciation de la première classe \texttt{F\_COLLECTION} avec les modules \texttt{CATALOGUE} et \texttt{GESTIONNAIRE\_CATALOGUE}.
+\end{enumerate}
+
+\subsection{Interprétation de la sort Collection}
+\subsubsection{La spécialisation Collection}
+\begin{verbatim}
+struct Collection = Gestionnaire[struct Catalogue]
+\end{verbatim}
+
+\subsubsection{Interprétation}
+{\tt
+collection\_vide(ref:String) cat:Collection\\
+\underline{Pré}
+$$ Pré\_collection\_vide\ \Leftrightarrow\ Pré\_gestionnaire\_vide $$
+\underline{Post}
+$$ Post\_collection\_vide \Leftrightarrow\ Prost\_gestionnaire\_vide $$
+}
+
+\subsubsection{Spécification}
+{\tt
+collection\_vide(ref:String) cat:Collection\\
+\underline{Pré}
+$$ Pré\_collection\_vide\ \Leftrightarrow\ Pré\_gestionnaire\_vide $$
+\underline{Post}
+$$ Post\_collection\_vide \Leftrightarrow\ Prost\_gestionnaire\_vide $$
+}
+
+\subsubsection{Obligation de preuve}
+Obligation de preuve de \texttt{gestionnaire\_vide}.
+
+\section{Le module Systeme}
+La spécification d'architecture:\\
+{\tt
+F\_SYSTEME: Collection * String $\rightarrow$ Systeme\\
+SYSTEME\_VENTE = F\_SYSTEME[COLLECTION][STRING]\\
+}
+indique que:
+\begin{enumerate}
+\item le module de première classe \texttt{F\_SYSTEME} fournira une implémentation de la spécification \texttt{Systeme} à condition qu'on lui fournisse les implémentations des spécifications \texttt{Collection} et \texttt{String};
+\item le module \texttt{SYSTEME\_VENTE} fournit une implémentation de la spécification \texttt{Systeme} par instanciation de la première classe \texttt{F\_SYSTEME} avec les modules \texttt{COLLECTION} ET \texttt{STRING}.
+\end{enumerate}
+
+\subsection{Interprétation de la sort Systeme}
+\subsubsection{La structure de donnée Systeme}
+\begin{verbatim}
+struct Systeme
+  ref: String
+  coll: struct Collection
+\end{verbatim}
+
+\subsection{L'opération Systeme\_vide}
+\subsubsection{Interprétation}
+{\tt
+system\_vide(ref:String) sys:Systeme\\
+\underline{Pré(ref)}
+$$ true $$
+\underline{Post(ref, sys)}
+$$ sys.ref = ref\ \wedge\ sys.coll = vide $$
+}
+
+\subsubsection{Spécification}
+{\tt
+system\_vide(ref:String) sys:Systeme\\
+\underline{Pré(ref)}
+$$ true $$
+\underline{Post(ref, sys)}
+$$ reference(sys) = ref\ \wedge\ collection\_de\ sys = vide $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall sys:Systeme,\ ref:String,\quad sys = systeme\_vide(ref) \implies Post(ref, sys) $$
+
+\subsection{L'opération changer\_collection}
+\subsubsection{Interprétation}
+{\tt
+changer\_collection(sys1:Systeme, coll:Collection) syst2:Systeme\\
+\underline{Pré(sys1, coll)}
+$$ true $$
+\underline{Post(sys1, coll, sys2)}
+$$ sys2.ref = sys1.ref\ \wedge\ sys2.coll = coll $$
+}
+
+\subsubsection{Spécification}
+{\tt
+changer\_collection(sys1:Systeme, coll:Collection) syst2:Systeme\\
+\underline{Pré(sys1, coll)}
+$$ true $$
+\underline{Post(sys1, coll, sys2)}
+$$ reference(sys2) = reference(sys)\ \wedge\ collection\_de\ sys2 = coll $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall sys1,sys2:Systeme,\ coll:Collection,$$
+$$ sys2 = changer\_collection(sys1, coll) \implies Post(sys1, coll, sys2)$$
+
+\subsection{L'opération reference}
+\subsubsection{Interprétation}
+{\tt
+reference(sys:Systeme) ref:String\\
+\underline{Pré(sys)}
+$$ true $$
+\underline{Post(sys, ref)}
+$$ ref = sys.ref $$
+}
+
+\subsubsection{Spécification}
+{\tt
+reference(sys:Systeme) ref:String\\
+\underline{Pré(sys)}
+$$ true $$
+\underline{Post(sys, ref)}
+$$ sys = changer\_collection(systeme\_vide(ref), collection\_de\ \text{sys}) $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall sys:Systeme,\ ref:String,\quad ref = reference(sys) \implies Post(sys, ref) $$
+
+\subsection{L'opération collection\_de\_\_}
+\subsubsection{Interprétation}
+{\tt
+collection\_de\_\_(sys:Systeme) coll:Collection\\
+\underline{Pré(sys)}
+$$ true $$
+\underline{Post(sys, coll)}
+$$ coll = sys.coll $$
+}
+
+\subsubsection{Spécification}
+{\tt
+collection\_de\_\_(sys:Systeme) coll:Collection\\
+\underline{Pré(sys)}
+$$ true $$
+\underline{Post(sys, coll)}
+$$ sys = changer\_collection(systeme\_vide(reference(sys)), \text{coll}) $$
+}
+
+\subsubsection{Obligation de preuve}
+$$ \forall\ sys:Systeme,\ coll:Collection,\quad coll = collection\_de\ sys \implies Post(sys, coll)$$
+
+\bibliographystyle{plain}
+\bibliography{interpretation-verification.bib}
+\end{document}

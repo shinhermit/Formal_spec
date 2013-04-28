@@ -11,25 +11,29 @@ from Basic/StructuredDatatypes get Set
 spec Article00 =
 String and Rat and Nat and Int
 then
-generated type Article ::= creer_article(Rat; Nat; Nat; Int)
+generated type Article ::= creer_article(String; Rat; Nat; Nat; Int)
 preds
 __est_en_rupture_de_stock: Article
 
 ops
+reference: Article -> String;
 prix: Article -> Rat;
 stock: Article -> Int;
 delai_livraison: Article -> Nat;
 taux_promotion: Article -> Nat;
 prix_promotion: Article -> Rat;
 
-forall art, art2 : Article; tx, delai : Nat; stck : Int; prx : Rat
+forall art, art2 : Article; tx, delai : Nat; stck : Int; prx : Rat; ref : String
 
 %%axiomes
-. stock(art) >= 0
+. reference( creer_article(ref, prx, delai, tx, stck) ) = ref
+. reference(art) = reference(art2) => art = art2
+
+. stock(art) >= 0 /\ prix(art) >= 0
 . art est_en_rupture_de_stock <=> stock(art) = 0
 
-. art = creer_article(prx, delai, tx, stck) => prix(art) = prx /\ delai_livraison(art) = delai /\ taux_promotion(art) = tx /\ stock(art) = stck
-. prix_promotion( creer_article(prx, delai, tx, stck) ) = prx - (prx*tx)/100
+. art = creer_article(ref, prx, delai, tx, stck) => reference(art) = ref /\ prix(art) = prx /\ delai_livraison(art) = delai /\ taux_promotion(art) = tx /\ stock(art) = stck
+. prix_promotion( creer_article(ref, prx, delai, tx, stck) ) = prx - (prx*tx)/100
 
 end
 
@@ -48,10 +52,10 @@ forall art, art2 :Article; quant: Int; tx: Nat
 
 %%axiomes
 . def approvisionner(art,quant) =>
-     ( art2 = approvisionner(art,quant) <=> art2 = creer_article( prix(art), delai_livraison(art), taux_promotion(art), quant) )
-. art2 = promotionner(art, tx) <=> art2 = creer_article( prix(art), delai_livraison(art), tx, stock(art) )
+     ( art2 = approvisionner(art,quant) <=> art2 = creer_article( reference(art), prix(art), delai_livraison(art), taux_promotion(art), quant) )
+. art2 = promotionner(art, tx) <=> art2 = creer_article( reference(art), prix(art), delai_livraison(art), tx, stock(art) )
 . def livrer(art, quant) =>
-     ( art2 = livrer(art, quant) <=> art2 = creer_article( prix(art), delai_livraison(art), taux_promotion(art), stock(art) - quant ) )
+     ( art2 = livrer(art, quant) <=> art2 = creer_article( reference(art), prix(art), delai_livraison(art), taux_promotion(art), stock(art) - quant ) )
 
 end
 
@@ -114,17 +118,16 @@ then
 generated type Systeme ::= systeme_vide(String) | changer_collection(Systeme, Collection)
 ops
 reference: Systeme -> String
-collection_de__: Systeme ->? Collection
+collection_de__: Systeme -> Collection
 
 forall sys, sys2: Systeme; coll, coll2 : Collection; ref : String
-%%ensembles de définitions
-. def collection_de sys <=> not sys = systeme_vide(ref)
 
 %% Axiomes
 . reference( systeme_vide(ref) ) = ref
 . reference( changer_collection(sys, coll) ) = reference(sys)
 . reference(sys) = reference(sys2) => sys = sys2
 
+. collection_de systeme_vide(ref) = vide
 . collection_de changer_collection(sys, coll) = coll
 end
 
@@ -150,11 +153,11 @@ F_GESTIONNAIRE: Gestionnaire00[sort S] * String -> Gestionnaire[sort S]
 GESTIONNAIRE = F_GESTIONNAIRE[GESTIONNAIRE00][STRING]
 
 F_CATALOGUE:  Article * Gestionnaire[sort Article fit sort S |-> Article] -> Catalogue
-GESTIONNAIRE_ARTICLE: Gestionnaire[Article fit S |-> Article] given ARTICLE %% Erreur compilation: Symbols shared between actual parameter and body must be in formal parameter:
+GESTIONNAIRE_ARTICLE: Gestionnaire[sort Article fit sort S |-> Article] given ARTICLE
 CATALOGUE = F_CATALOGUE[ARTICLE][GESTIONNAIRE_ARTICLE]
 
 F_COLLECTION:  Catalogue * Gestionnaire[sort Catalogue fit sort S |-> Catalogue] -> Collection
-GESTIONNAIRE_CATALOGUE: Gestionnaire[Catalogue fit S |-> Catalogue] given CATALOGUE %% Erreur compilation: Symbols shared between actual parameter and body must be in formal parameter:
+GESTIONNAIRE_CATALOGUE: Gestionnaire[sort Catalogue fit sort S |-> Catalogue] given CATALOGUE
 COLLECTION = F_COLLECTION[CATALOGUE][GESTIONNAIRE_CATALOGUE]
 
 F_SYSTEME: Collection * String -> Systeme
