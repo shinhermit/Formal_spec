@@ -1,0 +1,11 @@
+class Test
+instance variables
+public shed1:Shed := new Shed({<R1>,<R2>,<R3>}, {});
+public shed2:Shed := new Shed({<R2>, <R4>, <R6>}, {<T1>, <T2>, <T3>, <T4>});
+
+end Test
+
+--In the interpreter:
+--create tester = new Test()
+--print tester.shed1
+--print tester.shed2
