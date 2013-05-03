@@ -58,7 +58,7 @@ operations
 		finishedTasks := {};
 		freeRobots := freeRobots union busyRobots;
 		busyRobots := {};
-		assign := assign ++ {|->}
+		assign := {|->}
 	)
 	pre task <> {}
 	post waitingTasks = task

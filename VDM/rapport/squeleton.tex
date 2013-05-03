@@ -73,6 +73,48 @@ Opérations nécessaires au contrôle de l'état du système:
 
 \section{Validation du modèle}
 \subsection{Validation statique: contrôle d'intégrité}
+\begin{verbatim}
+(forall id_3 in set dom (assign), id_4 in set dom ({robot |-> task}) &
+id_3 = id_4 => assign(id_3) = {robot |-> task}(id_4))
+
+assign := assign munion {robot |-> task}
+dans
+assignTask: Robot * StandardTask ==> ()
+   77: 	assignTask(robot, task) ==
+   78: 	(
+   79: 		freeRobots := freeRobots \ {robot};
+   80: 		waitingTasks := waitingTasks \ {task};
+   81: 		busyRobots := busyRobots union {robot};
+   82: 		runningTasks := runningTasks union {task};
+   83: 		assign := assign munion {robot |-> task}
+   84: 	)
+   85: 
+\end{verbatim}
+\begin{verbatim}
+robot in set dom (assign)
+
+   94: 	     assign(robot) = task;
+dans
+post assignTask(robot, task)
+\end{verbatim}
+\begin{verbatim}
+(forall id_1,id_2 in set {|->} &
+id_1 <> id_2 => {|->}(id_1) <> {|->}(id_2))
+
+   61: 		assign := {|->}
+dans
+changeTask(task)
+\end{verbatim}
+\begin{verbatim}
+refuse de mettre celle là à oui
+(forall id_7,id_8 in set {|->} &
+id_7 <> id_8 => {|->}(id_7) <> {|->}(id_8))
+
+   17: assign: Assigner := {|->};
+dans
+instances variables
+\end{verbatim}
+en tout, 12 obligations de preuves.
 \subsection{Validation dynamique: interpréteur}
 \subsubsection{Instruction de test pour la classe XXX}
 
