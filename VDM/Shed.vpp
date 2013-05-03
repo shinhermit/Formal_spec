@@ -1,0 +1,157 @@
+class Shed
+types
+	public Robot = <R1> | <R2> | <R3> | <R4> | <R5> | <R6> | <R7> | <R8> | <R9> | <R10>;
+	public StandardTask = <T1> | <T2> | <T3> | <T4> | <T5> | <T6>;
+	public Task = set of StandardTask;
+	public Workers = set of Robot;
+	Assigner = inmap Robot to StandardTask;
+
+instance variables
+waitingTasks : Task;
+runningTasks : Task;
+finishedTasks : Task;
+
+freeRobots : Workers;
+busyRobots : Workers;
+
+assign: Assigner;
+
+inv waitingTasks inter runningTasks = {}
+    and
+    waitingTasks inter finishedTasks = {}
+    and
+    runningTasks inter finishedTasks = {}
+    and
+    freeRobots inter busyRobots = {}
+    and
+    dom assign = busyRobots
+    and
+    rng assign = runningTasks;
+
+operations
+	public Shed: Workers * Task ==> Shed
+	Shed(workers, task) ==
+	   is not yet specified
+	pre workers <> {}
+	post freeRobots = workers
+	     and
+	     busyRobots = {}
+	     and
+	     waitingTasks = task
+	     and
+	     runningTasks union finishedTasks = {}
+	     and
+	     dom assign = {}
+	     and
+	     rng assign = {};
+
+	public changeTask: Task ==> ()
+	changeTask(task) ==
+	   is not yet specified
+	pre task <> {}
+	post waitingTasks = task
+	     and
+	     runningTasks union finishedTasks = {}
+	     and
+	     freeRobots = freeRobots~ union busyRobots~
+	     and
+	     busyRobots = {}
+	     and
+	     dom assign = {}
+	     and
+	     rng assign = {};
+
+	assignTask: Robot * StandardTask ==> ()
+	assignTask(robot, task) ==
+	   is not yet specified
+	pre robot in set freeRobots and task in set waitingTasks
+	post robot in set busyRobots
+	     and
+	     robot not in set freeRobots
+	     and
+	     task in set runningTasks
+	     and
+	     task not in set waitingTasks union finishedTasks
+	     and
+	     assign(robot) = task;
+
+	endTask: StandardTask ==> ()
+	endTask(task) ==
+		is not yet specified
+	pre task in set runningTasks
+	post task in set finishedTasks
+	     and
+	     not task in set waitingTasks union runningTasks
+	     and
+	     runner(task) in set freeRobots
+	     and
+	     not runner(task) in set busyRobots
+	     and
+	     not runner(task) in set dom assign
+	     and
+	     not task in set rng assign;
+
+	endTask: Robot ==> ()
+	endTask(robot) ==
+	   is not yet specified
+	pre robot in set busyRobots
+	post robot in set freeRobots
+	     and
+	     not robot in set busyRobots
+	     and
+	     taskOf(robot) in set finishedTasks
+	     and
+	     not taskOf(robot) in set waitingTasks union runningTasks
+	     and
+	     not robot in set dom assign
+	     and
+	     not taskOf(robot) in set rng assign;
+
+	--reminder: Task = set of StandardTask
+	public getWaitingTasks: () ==> Task
+	getWaitingTasks() ==
+	   is not yet specified
+	pre true
+	post RESULT = waitingTasks;
+	
+	--reminder: Task = set of StandardTask
+	public getRunningTasks: () ==> Task
+	getRunningTasks() ==
+	   is not yet specified
+	pre true
+	post RESULT = runningTasks;
+	
+	--reminder: Task = set of StandardTask
+	public getFinishedTasks: () ==> Task
+	getFinishedTasks() ==
+	   is not yet specified
+	pre true
+	post RESULT = finishedTasks;
+	
+	--reminder: Workers = set of Robot
+	public getFreeRobots: () ==> Workers
+	getFreeRobots() ==
+	   is not yet specified
+	pre true
+	post RESULT = freeRobots;
+	
+	--reminder: Workers = set of Robot
+	public getBusyRobots: () ==> Workers
+	getBusyRobots() ==
+	   is not yet specified
+	pre true
+	post RESULT = busyRobots;
+
+	public runner: StandardTask ==> Robot
+	runner(task) ==
+	   is not yet specified
+	pre task in set runningTasks
+	post assign(RESULT) = task;
+	
+	public taskOf: Robot ==> StandardTask
+	taskOf(robot) ==
+	   is not yet specified
+	pre robot in set busyRobots
+	post runner(RESULT) = robot
+
+end Shed
