@@ -7,14 +7,14 @@ types
 	Assigner = inmap Robot to StandardTask;
 
 instance variables
-waitingTasks : Task;
-runningTasks : Task;
-finishedTasks : Task;
+waitingTasks : Task := {};
+runningTasks : Task := {};
+finishedTasks : Task := {};
 
-freeRobots : Workers;
-busyRobots : Workers;
+freeRobots : Workers := {};
+busyRobots : Workers := {};
 
-assign: Assigner;
+assign: Assigner := {|->};
 
 inv waitingTasks inter runningTasks = {}
     and
@@ -24,6 +24,8 @@ inv waitingTasks inter runningTasks = {}
     and
     freeRobots inter busyRobots = {}
     and
+    card runningTasks = card busyRobots
+    and
     dom assign = busyRobots
     and
     rng assign = runningTasks;
@@ -31,7 +33,10 @@ inv waitingTasks inter runningTasks = {}
 operations
 	public Shed: Workers * Task ==> Shed
 	Shed(workers, task) ==
-	   is not yet specified
+	(
+		waitingTasks := task;
+		freeRobots := workers
+	)
 	pre workers <> {}
 	post freeRobots = workers
 	     and
@@ -47,7 +52,14 @@ operations
 
 	public changeTask: Task ==> ()
 	changeTask(task) ==
-	   is not yet specified
+	(
+		waitingTasks := task;
+		runningTasks := {};
+		finishedTasks := {};
+		freeRobots := freeRobots union busyRobots;
+		busyRobots := {};
+		assign := assign ++ {|->}
+	)
 	pre task <> {}
 	post waitingTasks = task
 	     and
@@ -63,7 +75,13 @@ operations
 
 	assignTask: Robot * StandardTask ==> ()
 	assignTask(robot, task) ==
-	   is not yet specified
+	(
+		freeRobots := freeRobots \ {robot};
+		waitingTasks := waitingTasks \ {task};
+		busyRobots := busyRobots union {robot};
+		runningTasks := runningTasks union {task};
+		assign := assign munion {robot |-> task}
+	)
 	pre robot in set freeRobots and task in set waitingTasks
 	post robot in set busyRobots
 	     and
@@ -77,7 +95,16 @@ operations
 
 	endTask: StandardTask ==> ()
 	endTask(task) ==
-		is not yet specified
+	let robot:Robot = runner(task)
+	in
+	(
+		runningTasks := runningTasks \ {task};
+		busyRobots := busyRobots \ {robot};
+		finishedTasks := finishedTasks union {task};
+		freeRobots := freeRobots union {robot};
+		assign := {robot} <-: assign;
+		assign := assign :-> {task}
+	)
 	pre task in set runningTasks
 	post task in set finishedTasks
 	     and
@@ -93,7 +120,16 @@ operations
 
 	endTask: Robot ==> ()
 	endTask(robot) ==
-	   is not yet specified
+	let task:StandardTask = assign(robot)
+	in
+	(
+		busyRobots := busyRobots \ {robot};
+		runningTasks := runningTasks \ { task};
+		freeRobots := freeRobots union {robot};
+		finishedTasks := finishedTasks union {task};
+		assign := {robot} <-: assign;
+		assign := assign :-> {task};
+	)
 	pre robot in set busyRobots
 	post robot in set freeRobots
 	     and
@@ -110,47 +146,49 @@ operations
 	--reminder: Task = set of StandardTask
 	public getWaitingTasks: () ==> Task
 	getWaitingTasks() ==
-	   is not yet specified
+	   return waitingTasks
 	pre true
 	post RESULT = waitingTasks;
 	
 	--reminder: Task = set of StandardTask
 	public getRunningTasks: () ==> Task
 	getRunningTasks() ==
-	   is not yet specified
+	   return runningTasks
 	pre true
 	post RESULT = runningTasks;
 	
 	--reminder: Task = set of StandardTask
 	public getFinishedTasks: () ==> Task
 	getFinishedTasks() ==
-	   is not yet specified
+	   return finishedTasks
 	pre true
 	post RESULT = finishedTasks;
 	
 	--reminder: Workers = set of Robot
 	public getFreeRobots: () ==> Workers
 	getFreeRobots() ==
-	   is not yet specified
+	   return freeRobots
 	pre true
 	post RESULT = freeRobots;
 	
 	--reminder: Workers = set of Robot
 	public getBusyRobots: () ==> Workers
 	getBusyRobots() ==
-	   is not yet specified
+	   return busyRobots
 	pre true
 	post RESULT = busyRobots;
 
 	public runner: StandardTask ==> Robot
 	runner(task) ==
-	   is not yet specified
+		let r_assign:inmap StandardTask to Robot = inverse assign
+		in
+		return r_assign(task)
 	pre task in set runningTasks
 	post assign(RESULT) = task;
 	
 	public taskOf: Robot ==> StandardTask
 	taskOf(robot) ==
-	   is not yet specified
+	   return assign(robot)
 	pre robot in set busyRobots
 	post runner(RESULT) = robot
 
