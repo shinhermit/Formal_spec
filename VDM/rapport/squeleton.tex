@@ -1,0 +1,80 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+
+\author{Josuah Aron}
+\date{02/05/2013}
+\title{TP2 de génie logiciel: spécification en Vdm++}
+
+\begin{document}
+\section{Analyse}
+\subsection{Introduction: objectif du modèle}
+Produire un logiciel qui permette, à tout instant, de connaître et de contrôler l'état du système:
+\begin{enumerate}
+\item connaître l'état:
+  \begin{itemize}
+  \item la liste des tâches en attente,
+  \item la liste des tâches en cours d’exécution,
+  \item la liste des tâches terminées,
+  \item le robot qui exécute une tâche en cours d’exécution,
+  \item la tâche affectée à un robot occupé.
+  \item la liste des robots occupés.
+  \item  \end{itemize}
+\item modifier l'état
+  \begin{itemize}
+  \item affecter une tâche à un robot
+  \item interrompre un tâche en cours
+  \end{itemize}
+\end{enumerate}
+
+\subsection{Définition des besoins}
+\subsection{Analyse des besoins fonctionnels}
+\subsubsection{Les classes}
+\begin{itemize}
+\item La classe représentant l'atelier: \texttt{Shed}
+\end{itemize}
+
+\subsubsection{Les types}
+\begin{itemize}
+\item Le type des robots: \texttt{Robot}, correspond à la représentation interne des robots au sein de la classe \texttt{Shed}.
+\item Le type des tâches: \texttt{Task}
+\end{itemize}
+
+\subsubsection{Les opérations}
+Opérations exigées dans le cahier des charges:
+\begin{itemize}
+\item \texttt{waitingTasks}: fournit l'ensemble des tâches en attente
+\item \texttt{runningTasks}: fournit l'ensemble des tâches en cours d'exécution
+\item \texttt{finishedTasks}: fournit l'ensemble des tâches terminées
+\item \texttt{runner}: fournit le robot qui exécute une tâche
+\item \texttt{taskOf}: fournit la tâche affectée à nu robot
+\item \texttt{busyRobots}: fournit l'ensemble des robots occupés
+\end{itemize}
+Opérations nécessaires au contrôle de l'état du système:
+\begin{itemize}
+\item \texttt{assignTask}: signifier l'affectation d'une tâche à un robot. Cette opération est fournie pour l'ordonnanceur.
+\item \texttt{endTask}: signifier la fin de l'exécution d'un tâche par un robot. Cette opération est fournie pour les robots.
+\end{itemize}
+
+\subsection{Prévisualisation UML}
+ ----------------------
+| Shed                 |
+ ----------------------
+| robots: set of Robot |
+| tasks: set of Task   |
+ --------------------- 
+
+\section{Modélisation}
+\subsection{Squelette: UML -> Vdm++}
+\subsection{Développement du modèle: invariants, opérations}
+\subsection{Mise à jour du modèle UML}
+\subsection{Modèle complet}
+
+\section{Validation du modèle}
+\subsection{Validation statique: contrôle d'intégrité}
+\subsection{Validation dynamique: interpréteur}
+\subsubsection{Instruction de test pour la classe XXX}
+
+\section{Génération du code Java}
+\end{document}
